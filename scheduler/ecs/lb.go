@@ -26,7 +26,7 @@ type LBProcessManager struct {
 func (m *LBProcessManager) CreateProcess(ctx context.Context, app *scheduler.App, p *scheduler.Process) error {
 	if p.Exposure > scheduler.ExposeNone {
 		// Attempt to find an existing load balancer for this app.
-		l, err := m.findLoadBalancer(ctx, app.ID, p.Type)
+		l, err := m.findLoadBalancer(ctx, app.Name, p.Type)
 		if err != nil {
 			return err
 		}
@@ -42,7 +42,7 @@ func (m *LBProcessManager) CreateProcess(ctx context.Context, app *scheduler.App
 
 		// If this app doesn't have a load balancer yet, create one.
 		if l == nil {
-			tags := lbTags(app.ID, p.Type)
+			tags := lbTags(app.Name, p.Type)
 
 			// Add "App" tag so that a CNAME can be created.
 			tags[lb.AppTag] = app.Name
@@ -64,28 +64,6 @@ func (m *LBProcessManager) CreateProcess(ctx context.Context, app *scheduler.App
 	}
 
 	return m.ProcessManager.CreateProcess(ctx, app, p)
-}
-
-// RemoveProcess removes the process then removes the associated LoadBalancer.
-func (m *LBProcessManager) RemoveProcess(ctx context.Context, app string, p string) error {
-	if err := m.ProcessManager.RemoveProcess(ctx, app, p); err != nil {
-		return err
-	}
-
-	l, err := m.findLoadBalancer(ctx, app, p)
-	if err != nil {
-		// TODO: Maybe we shouldn't care here.
-		return err
-	}
-
-	if l != nil {
-		if err := m.lb.DestroyLoadBalancer(ctx, l); err != nil {
-			// TODO: Maybe we shouldn't care here.
-			return err
-		}
-	}
-
-	return nil
 }
 
 // findLoadBalancer attempts to find an existing load balancer for the app.
