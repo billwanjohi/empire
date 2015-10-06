@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/codegangsta/cli"
@@ -237,6 +238,7 @@ var EmpireFlags = []cli.Flag{
 }
 
 func main() {
+	<-time.After(30 * time.Second)
 	app := cli.NewApp()
 	app.Name = "empire"
 	app.Usage = "Platform as a Binary"
